@@ -12,9 +12,6 @@ import android.util.Log;
 import com.example.sohan.smsreader.database.SmsReaderContract;
 import com.example.sohan.smsreader.database.SmsReaderHelper;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.regex.Matcher;
@@ -92,32 +89,33 @@ public class AsynchTaskHelper extends AsyncTask<String, Integer, String> {
                         model.setPerson(person);
                         //insertIntoDatabase(model);
 
-                       /* String rulesJsonFile = loadJSONFromAsset();
-                        JSONObject rulesJsonObj = new JSONObject(rulesJsonFile);
-                        if (!rulesJsonObj.isNull("rules")) {
-                            JSONArray jsonArray = rulesJsonObj.getJSONArray("rules");
-                            for (int j = 0 ; j < jsonArray.length(); j++) {
-                                JSONObject jsonObject = jsonArray.getJSONObject(0);
-                                if (!jsonObject.isNull("name")) {
-                                }
-                                if (!jsonObject.isNull("patterns")) {
-                                    JSONArray patterArray = jsonObject.getJSONArray("patterns");
-                                    for (int k = 0 ; k < patterArray.length(); k ++) {
-                                        JSONObject patternOBj = patterArray.getJSONObject(0);
-                                        if (!patternOBj.isNull("regex")) {
-                                            String regex = patternOBj.getString("regex");
-                                            Pattern pattern = Pattern.compile(regex);
-                                            Matcher matcher = pattern.matcher(body);
-                                            if (matcher.find()) {
-                                                Log.i(TAG, " Pattern " +  matcher.group(0));
-                                            }
-                                        }
+                        /*InputStream stream = mContext.getAssets().open("rules.json");
+                        try {
+                            JsonReader reader = new JsonReader(new InputStreamReader(stream, "UTF-8"));
+                            Gson gson = new GsonBuilder().create();
+                            reader.beginObject();
+                            while (reader.hasNext()) {
+                                PatterModel patterModel = gson.fromJson(reader.toString(), PatterModel.class);
+                                PatterModel.RulesModel rulesModelList = patterModel.getRulesModelList().get(0);
+                                List<PatterModel.Patterns> patternsList = rulesModelList.getPatterList();
+                                for (PatterModel.Patterns patterns : patternsList) {
+                                    String regex = patterns.getRegex();
+                                    Pattern pattern = Pattern.compile(regex);
+                                    Matcher matcher = pattern.matcher(body);
+                                    if (matcher.find()) {
+                                        Log.i(TAG, "Patter " + matcher.group(0));
                                     }
                                 }
-                            }
-                        }*/
 
-                        //normalRegx(id, address, body, read, time, type, person);
+                                break;
+                            }
+                            reader.close();
+                        } catch (UnsupportedEncodingException ex) {
+
+                        } catch (IOException ex) {
+
+                        }*/
+                        normalRegx(id, address, body, read, time, type, person);
                         c.moveToNext();
                     }
                     status = "SUCCESS";
@@ -138,16 +136,31 @@ public class AsynchTaskHelper extends AsyncTask<String, Integer, String> {
         Pattern merchantName = Pattern.compile("(?i)(?:\\sat\\s|in\\*)([A-Za-z0-9]*\\s?-?\\s?[A-Za-z0-9]*\\s?-?\\.?)");
         Pattern cardName = Pattern.compile("(?i)(?:\\smade on|ur|made a\\s|in\\*)([A-Za-z]*\\s?-?\\s[A-Za-z]*\\s?-?\\s[A-Za-z]*\\s?-?)");
         Pattern msg = Pattern.compile("[a-zA-Z0-9]{2}-[a-zA-Z0-9]{6}");
+        Pattern creditPattern = Pattern.compile("(?i)(?:INR|Rs)[\\\\.,\\\\s]*([\\\\d,]*\\\\.?\\\\d{0,2}) debited to Ac x+(\\\\d{4}).*-(.*charges.*) tot.*(?:INR|Rs)[\\\\.,\\\\s]*([\\\\d,]*\\\\.?\\\\d{0,2})");
+
+
+        Pattern creditPattern2 = Pattern.compile("(?i)Transaction of (INR|Rs|[a-z]{3})[\\\\.\\\\s]*([\\\\d,]*\\\\.?\\\\d{1,2}).*Credit Card XX(\\\\d{4}) at (.*) on (.*).");
+        Pattern creditPattern6 = Pattern.compile("(?i) purchase of (?:INR|Rs)[\\\\.,\\\\s]*([\\\\d,]*\\\\.?\\\\d{0,2}) has been .* credit card\\\\s*\\\\d*x*\\\\d*(\\\\d{4}) at (.*) on.* balance is (?:INR|Rs)[\\\\.,\\\\s]*([\\\\d,]*\\\\.?\\\\d{0,2})");
+        Pattern creditPattern3 = Pattern.compile("(?i)(?:INR|Rs)[\\\\.,\\\\s]*([\\\\d,]*\\\\.?\\\\d{0,2}) has been spent .* credit card.* ending with (\\\\d{4}) at (.*) on ([\\\\d\\\\/]* at [\\\\d\\\\:]*) IST. avl bal (?:INR|Rs)[\\\\.,\\\\s]*([\\\\d,]*\\\\.?\\\\d{0,2}).");
+        Pattern creditPattern4 = Pattern.compile(" (?i)(?:INR|Rs)[\\\\.:,\\\\s]*([\\\\d,]+\\\\.?\\\\d{0,2}) .* centralbank (credit card) ending ([\\\\d]+) on ([\\\\d\\\\:\\\\-]*)at (.*)avl bal - (?:INR|Rs)[\\\\.:,\\\\s]*([\\\\d,]+\\\\.?\\\\d+).curr o\\\\/s - (?:INR|Rs)[\\\\.:,\\\\s]*([\\\\d,]+\\\\.?\\\\d+).");
+        Pattern creditPattern5 = Pattern.compile("(?i)(?:INR|RS)[\\\\.:,\\\\s]*([\\\\d,]*\\\\.?\\\\d{0,2}) has.* credit card.* x+(\\\\d{4}) .* at (.*) avl bal. is [\\\\.:,\\\\s]*([\\\\d,]*\\\\.?\\\\d{0,2})");
+        Pattern creditPattern7 = Pattern.compile("(?i)credit card no ending (\\\\d{4}) for (?:INR|Rs)[\\\\.,\\\\s]*([\\\\d,]*\\\\.?\\\\d{0,2}) on.* at (.*) contact");
+        Pattern creditPattern8 = Pattern.compile("(?i)(INR|Rs|[a-z]{3} )[\\\\.:,\\\\s]*([\\\\d,]+\\\\.?\\\\d{0,2}).*spent on your Credit Card X+([\\\\d]{4}) on (.*) at (.*)\\\\. Avbl.*?(?:INR|Rs)[\\\\.:,\\\\s]*(-?[\\\\d,]+\\\\.?\\\\d{0,2})");
+
+
 
         Matcher matcher = regEx.matcher(body);
         Matcher merchantMatcher = merchantName.matcher(address);
         Matcher cardMatcher = cardName.matcher(body);
         Matcher msgMatcher = msg.matcher(address);
+        Matcher creditMatcher = creditPattern.matcher(body);
+        Matcher creditMatcher2 = creditPattern2.matcher("Transaction of Rs.1,078.98 made on SBI Credit Card XX3450 at PAYTM on 9 Jun 15.");
 
         String cardNameStr = null;
         String str = null;
         String merchant = null;
         String bankName = null;
+        String creditCardStr = null;
 
 
         if (matcher.find()) {
@@ -162,13 +175,22 @@ public class AsynchTaskHelper extends AsyncTask<String, Integer, String> {
             cardNameStr = cardMatcher.group(0);
         }
 
-        if (msgMatcher.find()){
-            bankName =   msgMatcher.group();
+        if (msgMatcher.find()) {
+            bankName = msgMatcher.group();
         }
 
+        if (creditMatcher.find()){
+            creditCardStr = creditMatcher.group();
+        }
+
+        if (creditMatcher2.find()){
+            creditCardStr = creditMatcher2.group(0);
+        }
+
+        Log.e(TAG, "CardPattern " +  creditCardStr);
         Log.i(TAG, "Id " + id + " Address " + address + " Body " + body + " read "
                 + read + " Time " + time + " Type " + type + " Person " + person + " MESSAGE " + str
-                + " MERCHANT NAME " + merchant + " CARD NAME " + cardNameStr +  " Bank Name " + bankName);
+                + " MERCHANT NAME " + merchant + " CARD NAME " + cardNameStr + " Bank Name " + bankName);
     }
 
     private void insertIntoDatabase(SmsReaderModel model) {
@@ -184,20 +206,22 @@ public class AsynchTaskHelper extends AsyncTask<String, Integer, String> {
         database.insert(SmsReaderContract.SmsReaderEntry.TABLE_NAME, null, contentValues);
     }
 
-    public String loadJSONFromAsset() {
-        String json = null;
+    public InputStream loadJSONFromAsset() {
+        //String json = null;
+        InputStream stream = null;
         try {
             InputStream is = mContext.getAssets().open("rules.json");
             int size = is.available();
             byte[] buffer = new byte[size];
             is.read(buffer);
-            is.close();
-            json = new String(buffer, "UTF-8");
+            //is.close();
+            stream = is;
+            //json = new String(buffer, "UTF-8");
         } catch (IOException ex) {
             ex.printStackTrace();
             return null;
         }
-        return json;
+        return stream;
     }
 
 
